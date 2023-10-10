@@ -1,13 +1,10 @@
 package co.inventorsoft.academy.collections.model;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-
-import static java.lang.Math.round;
 
 /**
  * Task: design collection which represents a range. It needs to support all number based classes.
