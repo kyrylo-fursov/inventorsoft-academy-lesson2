@@ -1,13 +1,10 @@
 package co.inventorsoft.academy.collections.model;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-
-import static java.lang.Math.round;
 
 /**
  * Task: design collection which represents a range. It needs to support all number based classes.
@@ -15,14 +12,15 @@ import static java.lang.Math.round;
  * digit precision after comma. Custom types can be added via implementation of Comparable.
  */
 
-public class Range<T extends Comparable<T>> implements Set<T> {
-    private T min;
-    private T max;
-    private Function<T, T> increment;
-    private boolean isDefaultIncrement;
 
-    // constructor to create a range with increment
-    private Range(T start, T end, Function<T, T> increment) {
+public final class ImmutableRange<T extends Comparable<T>> implements Set<T> {
+    private final T min;
+    private final T max;
+    private final Function<T, T> increment;
+    private final int size;
+
+    // constructor to create a range with a custom increment
+    private ImmutableRange(T start, T end, Function<T, T> increment) {
         Objects.requireNonNull(start, "Start element cannot be null");
         Objects.requireNonNull(end, "End element cannot be null");
         Objects.requireNonNull(increment, "Increment function cannot be null");
@@ -35,32 +33,35 @@ public class Range<T extends Comparable<T>> implements Set<T> {
             this.min = null;
             this.max = null;
             this.increment = null;
-            this.isDefaultIncrement = false;
+            size = 0;
             return;
         }
 
         this.min = start;
         this.max = end;
-        this.increment = increment;
-        this.isDefaultIncrement = false;
+        this.increment = makeDeepCopy(increment);
+        size = calculateSize();
     }
 
-    // method to create a range of elements with a custom increment
-    public static <T extends Comparable<T>> Range<T> of(T start, T end, Function<T, T> increment) {
-        return new Range<>(start, end, increment);
+    private Function<T, T> makeDeepCopy(Function<T, T> original) {
+        throw new UnsupportedOperationException("makeDeepCopy operation is not supported");
     }
 
-    // method to create a range of elements with a default increment
-    public static <T extends Number & Comparable<T>> Range<T> of(T start, T end) {
-        Range<T> numberRange =  of(start, end, getIncrementFunction(start));
-        numberRange.isDefaultIncrement = true;
-        return numberRange;
+
+    //method to create a range of elements with a custom increment using addRange method
+    public static <T extends Comparable<T>> ImmutableRange<T> of(T start, T end, Function<T, T> increment) {
+        return new ImmutableRange<>(start, end, increment);
     }
 
-    // method to get the increment function for the range
+    public static <T extends Number & Comparable<T>> ImmutableRange<T> of(T start, T end) {
+        return of(start, end, getIncrementFunction(start));
+    }
+
+
     public static <T extends Number> Function<T, T> getIncrementFunction(T element) {
-        Objects.requireNonNull(element, "Element cannot be null");
-
+        if(element == null) {
+            throw new NullPointerException("Element cannot be null");
+        }
         if (element instanceof Integer) {
             return integer -> (T) Integer.valueOf((Integer) integer + 1); // Unchecked cast 'java.lang.Integer' to T?
         } else if (element instanceof Double) {
@@ -80,24 +81,11 @@ public class Range<T extends Comparable<T>> implements Set<T> {
 
     @Override
     public int size() {
-        return calculateSize();
+        return size;
     }
 
+    // calculate size of the range using the iterator
     private int calculateSize() {
-        // optimization for default increment
-        if (isDefaultIncrement) {
-            if (min instanceof Integer) {
-                return ((Integer) max - (Integer) min + 1);
-            } else if (min instanceof Long) {
-                return (int) ((Long) max - (Long) min + 1);
-            } else if (min instanceof Short) {
-                return ((Short) max - (Short) min + 1);
-            } else if (min instanceof Byte){
-                return ((Byte) max - (Byte) min + 1);
-            }
-        }
-
-        // calculate size of the range using the iterator
         int size = 0;
         for (T ignored : this) {
             size++;
@@ -107,7 +95,7 @@ public class Range<T extends Comparable<T>> implements Set<T> {
 
     @Override
     public boolean isEmpty() {
-        return (min == null);
+        return (size() == 0);
     }
 
     // find the element in the range using compareTo method
@@ -117,22 +105,12 @@ public class Range<T extends Comparable<T>> implements Set<T> {
             return false;
         }
 
-        Objects.requireNonNull(o, "Object cannot be null");
+        if (o == null) {
+            throw new NullPointerException("Element cannot be null");
+        }
 
         T element = (T) o;
         return element.compareTo(min) >= 0 && element.compareTo(max) <= 0;
-    }
-
-    // find if all the elements in the collection are present in the range
-    @Override
-    public boolean containsAll(Collection<?> c) {
-        if (isEmpty()) {
-            return false;
-        }
-
-        Objects.requireNonNull(c, "Collection cannot be null");
-
-        return c.stream().allMatch(this::contains);
     }
 
 
@@ -144,9 +122,6 @@ public class Range<T extends Comparable<T>> implements Set<T> {
 
             @Override
             public boolean hasNext() {
-                if(isEmpty()) {
-                    return false;
-                }
                 return element.compareTo(max) <= 0;
             }
 
@@ -190,6 +165,11 @@ public class Range<T extends Comparable<T>> implements Set<T> {
     }
 
     @Override
+    public boolean containsAll(Collection<?> c) {
+        throw new UnsupportedOperationException("containsAll operation is not supported");
+    }
+
+    @Override
     public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException("retainAll operation is not supported");
     }
@@ -200,5 +180,4 @@ public class Range<T extends Comparable<T>> implements Set<T> {
 
     }
 }
-
 
