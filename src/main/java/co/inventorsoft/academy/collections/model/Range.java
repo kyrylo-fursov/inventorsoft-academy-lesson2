@@ -9,13 +9,13 @@ import java.util.function.Function;
 /**
  * Task: design collection which represents a range. It needs to support all number based classes.
  * It should be based on collection framework’s Set interface. Float and double ranges should work with one
- * digit precision after comma. Custom types can be added via implementation of Comparable.
+ * digit after comma. Custom types can be added via implementation of Comparable.
  */
 
 public class Range<T extends Comparable<T>> implements Set<T> {
-    private T min;
-    private T max;
-    private Function<T, T> increment;
+    private final T min;
+    private final T max;
+    private final Function<T, T> increment;
     private boolean isDefaultIncrement;
 
     // constructor to create a range with increment
@@ -91,6 +91,10 @@ public class Range<T extends Comparable<T>> implements Set<T> {
                 return ((Short) max - (Short) min + 1);
             } else if (min instanceof Byte){
                 return ((Byte) max - (Byte) min + 1);
+            } else if (min instanceof Float) {
+                return (int) (((Float) max - (Float) min) * 10 + 1);
+            } else if (min instanceof Double) {
+                return (int) (((Double) max - (Double) min) * 10 + 1);
             }
         }
 
